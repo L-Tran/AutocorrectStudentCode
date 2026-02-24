@@ -1,4 +1,4 @@
-Name: YOUR NAME HERE
+Name: Logan Tran
 
 | Date    |  Time  |                                     Update |
 |:--------|:------:|-------------------------------------------:|
