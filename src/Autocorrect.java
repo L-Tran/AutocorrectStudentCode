@@ -19,6 +19,7 @@ public class Autocorrect {
      */
     public Autocorrect(String[] words, int threshold) {
 
+
     }
 
     /**
@@ -29,7 +30,39 @@ public class Autocorrect {
      */
     public String[] runTest(String typed) {
 
+
         return new String[0];
+    }
+
+    // Function to return edit distance
+    public int ed(String typed, String target) {
+        int m = typed.length();
+        int n = target.length();
+
+        // Initialize array for tabulation
+        int[][] tab = new int[m + 1][n + 1];
+
+        // Pad array
+        for(int i = 0; i < m + 1; i++) {
+            tab[i][0] = i;
+        }
+        for(int i = 0; i < n + 1; i++) {
+            tab[0][i] = i;
+        }
+
+        for(int i = 1; i < m + 1; i++) {
+            for(int j = 1; j < n + 1; j++) {
+                if(typed.charAt(i - 1) == target.charAt(j - 1)) {
+                    tab[i][j] = tab[i - 1][j - 1];
+                }
+                else {
+                    tab[i][j] = 1 + Math.min(tab[i - 1][j - 1], Math.min(tab[i][j - 1], tab [i - 1][j]));
+                }
+            }
+        }
+
+        return tab[m][n];
+
     }
 
 
