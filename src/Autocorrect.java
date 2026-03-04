@@ -12,14 +12,26 @@ import java.io.IOException;
  */
 public class Autocorrect {
 
+
+
     /**
      * Constucts an instance of the Autocorrect class.
      * @param words The dictionary of acceptable words.
      * @param threshold The maximum number of edits a suggestion can have.
      */
+
+    private TST dict;
+    private String[] words;
+    private int threshold;
+
+
     public Autocorrect(String[] words, int threshold) {
-
-
+        this.words = words;
+        this.threshold = threshold;
+        dict = new TST();
+        for (String word : words) {
+            dict.insert(word);
+        }
     }
 
     /**
@@ -30,8 +42,30 @@ public class Autocorrect {
      */
     public String[] runTest(String typed) {
 
+        // Temp arrays
+        String[] matches = new String[words.length];
+        int[] matchesEd = new int[words.length];
+        int count = 0;
 
-        return new String[0];
+        for(int i = 0; i < words.length; i++) {
+
+            int distance = ed(typed, words[i]);
+            if(distance <= threshold) {
+                matches[i] = words[i];
+                matchesEd[i] = distance;
+                count++;
+            }
+        }
+
+        // Sort
+
+        String result[] = new String[count];
+        for(int i = 0; i < count; i++) {
+            result[i] = matches[i];
+        }
+
+
+        return result;
     }
 
     // Function to return edit distance
