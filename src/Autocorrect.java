@@ -1,6 +1,8 @@
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Comparator;
 
 /**
  * Autocorrect
@@ -20,7 +22,6 @@ public class Autocorrect {
      * @param threshold The maximum number of edits a suggestion can have.
      */
 
-    private TST dict;
     private String[] words;
     private int threshold;
 
@@ -28,10 +29,6 @@ public class Autocorrect {
     public Autocorrect(String[] words, int threshold) {
         this.words = words;
         this.threshold = threshold;
-        dict = new TST();
-        for (String word : words) {
-            dict.insert(word);
-        }
     }
 
     /**
@@ -43,25 +40,23 @@ public class Autocorrect {
     public String[] runTest(String typed) {
 
         // Temp arrays
-        String[] matches = new String[words.length];
-        int[] matchesEd = new int[words.length];
-        int count = 0;
+        ArrayList<CandidateWord> possibleWords = new ArrayList<>();
 
         for(int i = 0; i < words.length; i++) {
-
             int distance = ed(typed, words[i]);
             if(distance <= threshold) {
-                matches[i] = words[i];
-                matchesEd[i] = distance;
-                count++;
+                possibleWords.add(new CandidateWord(distance, words[i]));
             }
         }
 
         // Sort
+        possibleWords.sort(Comparator.comparing(CandidateWord::geted)
+                .thenComparing(CandidateWord::getWord));
 
-        String result[] = new String[count];
-        for(int i = 0; i < count; i++) {
-            result[i] = matches[i];
+
+        String result[] = new String[possibleWords.size()];
+        for(int i = 0; i < possibleWords.size(); i++) {
+            result[i] = possibleWords.get(i).getWord();
         }
 
 
@@ -77,10 +72,10 @@ public class Autocorrect {
         int[][] tab = new int[m + 1][n + 1];
 
         // Pad array
-        for(int i = 0; i < m + 1; i++) {
+        for(int i = 1; i < m + 1; i++) {
             tab[i][0] = i;
         }
-        for(int i = 0; i < n + 1; i++) {
+        for(int i = 1; i < n + 1; i++) {
             tab[0][i] = i;
         }
 
