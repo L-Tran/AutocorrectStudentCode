@@ -22,13 +22,43 @@ public class Autocorrect {
      * @param threshold The maximum number of edits a suggestion can have.
      */
 
+    private final static int ALPHABET_SIZE = 26;
+
     private String[] words;
     private int threshold;
+    private ArrayList<Integer>[][] twoGram;
 
 
     public Autocorrect(String[] words, int threshold) {
         this.words = words;
         this.threshold = threshold;
+
+        this.twoGram = new ArrayList[ALPHABET_SIZE][ALPHABET_SIZE];
+
+        // Initialize two-grams
+        for (int i = 0; i < ALPHABET_SIZE; i++) {
+            for (int j = 0; j < ALPHABET_SIZE; j++) {
+                twoGram[i][j] = new ArrayList<>();
+            }
+        }
+
+        // Add word to two-grams it has
+        for (int k = 0; k < words.length; k++){
+            String word = words[k];
+            for(int l = 0; l < word.length() - 1; l++) {
+
+                int i = word.charAt(l) - 'a';
+                int j = word.charAt(l + 1) - 'a';
+
+                twoGram[i][j].add(k);
+
+            }
+
+        }
+
+
+
+
     }
 
     /**
@@ -42,10 +72,21 @@ public class Autocorrect {
         // Temp arrays
         ArrayList<CandidateWord> possibleWords = new ArrayList<>();
 
-        for(int i = 0; i < words.length; i++) {
-            int distance = ed(typed, words[i]);
-            if(distance <= threshold) {
-                possibleWords.add(new CandidateWord(distance, words[i]));
+        // Find words in Threshold out of two-grams
+        boolean[] seen = new boolean[words.length];
+
+        for(int k = 0; k < typed.length() - 1; k++) {
+            int i = typed.charAt(k) - 'a';
+            int j = typed.charAt(k + 1) - 'a';
+
+            for(int index: twoGram[i][j]) {
+                if(!seen[index]) {
+                    seen[index] = true;
+                    int distance = ed(typed, words[index]);
+                    if(distance <= threshold) {
+                        possibleWords.add(new CandidateWord(distance, words[index]));
+                    }
+                }
             }
         }
 
@@ -54,6 +95,7 @@ public class Autocorrect {
                 .thenComparing(CandidateWord::getWord));
 
 
+        // Convert to string
         String result[] = new String[possibleWords.size()];
         for(int i = 0; i < possibleWords.size(); i++) {
             result[i] = possibleWords.get(i).getWord();
