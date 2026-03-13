@@ -1,8 +1,10 @@
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Scanner;
 
 /**
  * Autocorrect
@@ -27,11 +29,13 @@ public class Autocorrect {
     private String[] words;
     private int threshold;
     private ArrayList<Integer>[][] twoGram;
+    private TST dict;
 
 
     public Autocorrect(String[] words, int threshold) {
         this.words = words;
         this.threshold = threshold;
+        this.dict = new TST();
 
         this.twoGram = new ArrayList[ALPHABET_SIZE][ALPHABET_SIZE];
 
@@ -45,20 +49,46 @@ public class Autocorrect {
         // Add word to two-grams it has
         for (int k = 0; k < words.length; k++){
             String word = words[k];
+            dict.insert(word);
             for(int l = 0; l < word.length() - 1; l++) {
 
                 int i = word.charAt(l) - 'a';
                 int j = word.charAt(l + 1) - 'a';
 
-                twoGram[i][j].add(k);
-
+                if(j  < 0 || j > 26) {
+                    l++;
+                }
+                else {
+                    twoGram[i][j].add(k);
+                }
             }
 
         }
+    }
+
+    public void prompt() {
+        // Command line implementation
+        Scanner s = new Scanner(System.in);
+        while(true) {
+            System.out.print("Enter a word: ");
+
+            String typed = s.nextLine();
 
 
+            if(dict.search(typed)) {
 
+            }
+            else {
+                System.out.println("you typed " + typed);
+                String[] options = runTest(typed);
 
+                System.out.println("Did you mean...");
+                for(int i = 0; i < Math.min(3, options.length); i++) {
+                    System.out.println(options[i]);
+                }
+            }
+            System.out.println("~~~~~~~~");
+        }
     }
 
     /**
@@ -161,5 +191,15 @@ public class Autocorrect {
         catch (IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    public static void main(String[] args) throws FileNotFoundException {
+        BufferedReader testReader = new BufferedReader(new FileReader("dictionaries/large.txt"));
+        AutocorrectTester tester = new AutocorrectTester();
+        String[] dictionary = tester.loadWords(testReader);
+        Autocorrect a = new Autocorrect(dictionary,3);
+        a.prompt();
+
+
     }
 }

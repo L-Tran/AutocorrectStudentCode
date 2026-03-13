@@ -53,7 +53,7 @@ public class AutocorrectTester {
         }
     }
 
-    private String[] loadWords(BufferedReader br) {
+    String[] loadWords(BufferedReader br) {
         String line;
         try {
             line = br.readLine();
