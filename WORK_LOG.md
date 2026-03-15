@@ -1,9 +1,3 @@
 Name: Logan Tran
 
-| Date    |  Time  |                                     Update |
-|:--------|:------:|-------------------------------------------:|
-| April 5 | 9-10pm | I tried to write abstract, efficient code. |
-|         |        |                                            |
-
-
-To add a new row to the table, click into a cell and then hit shift-enter.
+https://docs.google.com/document/d/1lvIlRovSTC-1xAv7kM3hYOlqC7MyjTe1vX6fwDyueUE/edit?tab=t.0
