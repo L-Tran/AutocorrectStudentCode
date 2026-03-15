@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Scanner;
+import java.util.HashMap;
 
 /**
  * Autocorrect
@@ -16,46 +17,49 @@ import java.util.Scanner;
  */
 public class Autocorrect {
 
-
-
     /**
      * Constucts an instance of the Autocorrect class.
      * @param words The dictionary of acceptable words.
      * @param threshold The maximum number of edits a suggestion can have.
      */
 
+    // Constants
     private final static int ALPHABET_SIZE = 26;
 
-    private String[] words;
-    private int threshold;
-    private ArrayList<Integer>[][] twoGram;
-    private TST dict;
+    // Instance variables
+    private final String[] words;
+    private final int threshold;
+    private final ArrayList<Integer>[][] twoGram;
+    private final TST dict;
+    private final HashMap<String, Integer> frequencyMap;
 
 
+    // Constructor
     public Autocorrect(String[] words, int threshold) {
         this.words = words;
         this.threshold = threshold;
+        this.frequencyMap = new HashMap<>();
         this.dict = new TST();
 
+        // Initialize two-grams
         this.twoGram = new ArrayList[ALPHABET_SIZE][ALPHABET_SIZE];
 
-        // Initialize two-grams
         for (int i = 0; i < ALPHABET_SIZE; i++) {
             for (int j = 0; j < ALPHABET_SIZE; j++) {
                 twoGram[i][j] = new ArrayList<>();
             }
         }
 
-        // Add word to two-grams it has
+        // Loop through words
         for (int k = 0; k < words.length; k++){
             String word = words[k];
             dict.insert(word);
+            // Add word to each two gram it has
             for(int l = 0; l < word.length() - 1; l++) {
-
                 int i = word.charAt(l) - 'a';
                 int j = word.charAt(l + 1) - 'a';
-
-                if(j  < 0 || j > 26) {
+                // Make sure characters are in the alphabet
+                if(j  < 0 || j >= ALPHABET_SIZE) {
                     l++;
                 }
                 else {
@@ -66,25 +70,38 @@ public class Autocorrect {
         }
     }
 
+    // Command line prompting
     public void prompt() {
-        // Command line implementation
         Scanner s = new Scanner(System.in);
         while(true) {
             System.out.print("Enter a word: ");
-
             String typed = s.nextLine();
-
-
+            // Ensure word is in the dictionary
             if(dict.search(typed)) {
-
             }
             else {
+                // Print out possible correct words
                 System.out.println("you typed " + typed);
                 String[] options = runTest(typed);
+                if (options.length == 0) {
+                    System.out.println("No suggestions found.");
+                }
+                else {
+                    int maxSuggestions = Math.min(3, options.length);
+                    System.out.println("Did you mean...");
+                    for(int i = 0; i < maxSuggestions; i++) {
+                        System.out.println(options[i]);
+                    }
+                    System.out.print("Choose (1-" + maxSuggestions + ") or 0 to skip: ");
 
-                System.out.println("Did you mean...");
-                for(int i = 0; i < Math.min(3, options.length); i++) {
-                    System.out.println(options[i]);
+                    int choice = Integer.parseInt(s.nextLine());
+                    if (choice >= 1 && choice <= maxSuggestions) {
+                        String chosenWord = options[choice - 1];
+                        frequencyMap.put(chosenWord, frequencyMap.getOrDefault(chosenWord, 0) + 1);
+                        System.out.println("Selected: " + chosenWord);
+                    } else {
+                        System.out.println("No selection made.");
+                    }
                 }
             }
             System.out.println("~~~~~~~~");
@@ -99,38 +116,44 @@ public class Autocorrect {
      */
     public String[] runTest(String typed) {
 
-        // Temp arrays
+        // Temp arraylist for words in threshold
         ArrayList<CandidateWord> possibleWords = new ArrayList<>();
 
-        // Find words in Threshold out of two-grams
+        // Associative array to prevent multiple look-ups for the same word
         boolean[] seen = new boolean[words.length];
 
+        // Find words in Threshold out of two-grams
         for(int k = 0; k < typed.length() - 1; k++) {
             int i = typed.charAt(k) - 'a';
             int j = typed.charAt(k + 1) - 'a';
-
-            for(int index: twoGram[i][j]) {
-                if(!seen[index]) {
-                    seen[index] = true;
-                    int distance = ed(typed, words[index]);
-                    if(distance <= threshold) {
-                        possibleWords.add(new CandidateWord(distance, words[index]));
+            if(j  < 0 || j >= ALPHABET_SIZE) {
+                k++;
+            }
+            else {
+                for(int index: twoGram[i][j]) {
+                    if(!seen[index]) {
+                        seen[index] = true;
+                        int distance = ed(typed, words[index]);
+                        if(distance <= threshold) {
+                            int freq = frequencyMap.getOrDefault(words[index], 0);
+                            possibleWords.add(new CandidateWord(distance, words[index], freq));
+                        }
                     }
                 }
             }
         }
 
-        // Sort
-        possibleWords.sort(Comparator.comparing(CandidateWord::geted)
-                .thenComparing(CandidateWord::getWord));
-
+        // Sort words in order of alphabet and edit distance
+        possibleWords.sort(
+                Comparator.comparingInt(CandidateWord::geted)
+                        .thenComparingInt(CandidateWord::getFrequency).reversed()
+                        .thenComparing(CandidateWord::getWord));
 
         // Convert to string
         String result[] = new String[possibleWords.size()];
         for(int i = 0; i < possibleWords.size(); i++) {
             result[i] = possibleWords.get(i).getWord();
         }
-
 
         return result;
     }
@@ -151,6 +174,7 @@ public class Autocorrect {
             tab[0][i] = i;
         }
 
+        // Use tabulation to find edit distance
         for(int i = 1; i < m + 1; i++) {
             for(int j = 1; j < n + 1; j++) {
                 if(typed.charAt(i - 1) == target.charAt(j - 1)) {
@@ -163,7 +187,6 @@ public class Autocorrect {
         }
 
         return tab[m][n];
-
     }
 
 
@@ -199,7 +222,5 @@ public class Autocorrect {
         String[] dictionary = tester.loadWords(testReader);
         Autocorrect a = new Autocorrect(dictionary,3);
         a.prompt();
-
-
     }
 }
