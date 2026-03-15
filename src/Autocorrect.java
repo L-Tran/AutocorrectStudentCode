@@ -86,14 +86,15 @@ public class Autocorrect {
                 if (options.length == 0) {
                     System.out.println("No suggestions found.");
                 }
+                // Prompt user for chosen word to record frequency
                 else {
                     int maxSuggestions = Math.min(3, options.length);
                     System.out.println("Did you mean...");
                     for(int i = 0; i < maxSuggestions; i++) {
                         System.out.println(options[i]);
                     }
+                    // Increase frequency to chosen word
                     System.out.print("Choose (1-" + maxSuggestions + ") or 0 to skip: ");
-
                     int choice = Integer.parseInt(s.nextLine());
                     if (choice >= 1 && choice <= maxSuggestions) {
                         String chosenWord = options[choice - 1];
@@ -135,6 +136,7 @@ public class Autocorrect {
                         seen[index] = true;
                         int distance = ed(typed, words[index]);
                         if(distance <= threshold) {
+                            // Add word to possible words with
                             int freq = frequencyMap.getOrDefault(words[index], 0);
                             possibleWords.add(new CandidateWord(distance, words[index], freq));
                         }
@@ -143,10 +145,10 @@ public class Autocorrect {
             }
         }
 
-        // Sort words in order of alphabet and edit distance
+        // Sort words in order of alphabet, frequency and edit distance
         possibleWords.sort(
                 Comparator.comparingInt(CandidateWord::geted)
-                        .thenComparingInt(CandidateWord::getFrequency).reversed()
+                        .thenComparing((a, b) -> Integer.compare(b.getFrequency(), a.getFrequency()))
                         .thenComparing(CandidateWord::getWord));
 
         // Convert to string
